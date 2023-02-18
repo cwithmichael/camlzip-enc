@@ -45,13 +45,9 @@ let writestring oc s =
 
 type compression_method = Stored | Deflated
 
-type encryption_method =
-  PKWARE of char
-| NoEncryption
+type encryption_method = PKWARE of char | NoEncryption
 
-type pkware_verification_type =
-  CheckTimeByte
-| CheckCRCByte
+type pkware_verification_type = CheckTimeByte | CheckCRCByte
 
 type entry =
   { filename: string;
@@ -208,11 +204,19 @@ let read_cd filename ic cd_entries cd_offset cd_bound =
                        | 8 -> Deflated
                        | _ -> raise (Error(filename, name,
                                            "unknown compression method")));
-             enc_methd = (match ( (flags lsr 0) land 1 = 1, (flags lsr 3) land 1 = 1, (flags lsr 6) land 1 = 1) with
-                            (false, _, _) -> NoEncryption
-                          | (true, false, false) -> PKWARE(char_of_int (Int32.to_int (Int32.shift_right crc 24)))
-                          | (true, true, false) -> PKWARE(char_of_int (lastmod_time lsr 8))
-                          | (true, _, true ) -> raise (Error(filename, name, "strong encryption not supported")));
+             enc_methd =
+               (match
+                  ( (flags lsr 0) land 1 = 1,
+                    (flags lsr 3) land 1 = 1,
+                    (flags lsr 6) land 1 = 1 )
+               with
+               | false, _, _ -> NoEncryption
+               | true, false, false ->
+                PKWARE (char_of_int(Int32.to_int (Int32.shift_right crc 24)))
+               | true, true, false -> PKWARE (char_of_int (lastmod_time lsr 8))
+               | true, _, true ->
+                 raise (Error (filename, name,
+                              "strong encryption not supported")));
              mtime = unixtime_of_dostime lastmod_time lastmod_date;
              crc = crc;
              uncompressed_size = uncompr_size;
