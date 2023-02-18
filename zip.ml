@@ -208,7 +208,7 @@ let read_cd filename ic cd_entries cd_offset cd_bound =
                        | 8 -> Deflated
                        | _ -> raise (Error(filename, name,
                                            "unknown compression method")));
-            enc_methd = (match ( (flags lsr 0) land 1 = 1, (flags lsr 3) land 1 = 1, (flags lsr 6) land 1 = 1) with
+             enc_methd = (match ( (flags lsr 0) land 1 = 1, (flags lsr 3) land 1 = 1, (flags lsr 6) land 1 = 1) with
                             (false, _, _) -> NoEncryption
                           | (true, false, false) -> PKWARE(char_of_int (Int32.to_int (Int32.shift_right crc 24)))
                           | (true, true, false) -> PKWARE(char_of_int (lastmod_time lsr 8))

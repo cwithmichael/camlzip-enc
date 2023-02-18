@@ -36,12 +36,14 @@ type compression_method =
         (** Indicate whether the data in the entry is compressed or not. *)
 
 type encryption_method =
-    PKWARE of char
-  | NoEncryption
+    PKWARE of char             (** entry is encrypted with PKWARE encryption *)
+  | NoEncryption               (** entry does not have encryption *)
+        (** Determine the method of encryption used *)
 
 type pkware_verification_type =
-    CheckTimeByte
-  | CheckCRCByte
+    CheckTimeByte              (** password should be checked against time*)
+  | CheckCRCByte               (** password should be checked against crc*)
+        (** The type of verication needed to check password *)
 
 type entry =
   { filename: string;             (** file name for entry *)
