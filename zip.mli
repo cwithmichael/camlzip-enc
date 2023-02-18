@@ -35,17 +35,26 @@ type compression_method =
   | Deflated                   (** data is compressed with the ``deflate'' algorithm *)
         (** Indicate whether the data in the entry is compressed or not. *)
 
+type encryption_method =
+    PKWARE of char
+  | NoEncryption
+
+type pkware_verification_type =
+    CheckTimeByte
+  | CheckCRCByte
+
 type entry =
-  { filename: string;          (** file name for entry *)
-    extra: string;             (** extra information attached to entry *)
-    comment: string;           (** comment attached to entry *)
-    methd: compression_method; (** compression method *)
-    mtime: float;              (** last modification time (seconds since epoch) *)
-    crc: int32;                (** cyclic redundancy check for data *)
-    uncompressed_size: int;    (** size of original data in bytes *)
-    compressed_size: int;      (** size of compressed data *)
-    is_directory: bool;        (** whether this entry represents a directory *)
-    file_offset: int64         (** for internal use *)
+  { filename: string;             (** file name for entry *)
+    extra: string;                (** extra information attached to entry *)
+    comment: string;              (** comment attached to entry *)
+    methd: compression_method;    (** compression method *)
+    enc_methd: encryption_method; (** encryption method *)
+    mtime: float;                 (** last modification time (seconds since epoch) *)
+    crc: int32;                   (** cyclic redundancy check for data *)
+    uncompressed_size: int;       (** size of original data in bytes *)
+    compressed_size: int;         (** size of compressed data *)
+    is_directory: bool;           (** whether this entry represents a directory *)
+    file_offset: int64            (** for internal use *)
   }
           (** Description of an entry in a ZIP file. *)
 

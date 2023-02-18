@@ -45,11 +45,20 @@ let writestring oc s =
 
 type compression_method = Stored | Deflated
 
+type encryption_method =
+  PKWARE of char
+| NoEncryption
+
+type pkware_verification_type =
+  CheckTimeByte
+| CheckCRCByte
+
 type entry =
   { filename: string;
     extra: string;
     comment: string;
     methd: compression_method;
+    enc_methd: encryption_method;
     mtime: float;
     crc: int32;
     uncompressed_size: int;
@@ -190,8 +199,6 @@ let read_cd filename ic cd_entries cd_offset cd_bound =
       if magic <> Int32.of_int 0x02014b50 then
         raise (Error(filename, name,
                      "wrong file header in central directory"));
-      if flags land 1 <> 0 then
-        raise (Error(filename, name, "encrypted entries not supported"));
 
       e := { filename = name;
              extra = extra;
@@ -201,6 +208,11 @@ let read_cd filename ic cd_entries cd_offset cd_bound =
                        | 8 -> Deflated
                        | _ -> raise (Error(filename, name,
                                            "unknown compression method")));
+            enc_methd = (match ( (flags lsr 0) land 1 = 1, (flags lsr 3) land 1 = 1, (flags lsr 6) land 1 = 1) with
+                            (false, _, _) -> NoEncryption
+                          | (true, false, false) -> PKWARE(char_of_int (Int32.to_int (Int32.shift_right crc 24)))
+                          | (true, true, false) -> PKWARE(char_of_int (lastmod_time lsr 8))
+                          | (true, _, true ) -> raise (Error(filename, name, "strong encryption not supported")));
              mtime = unixtime_of_dostime lastmod_time lastmod_date;
              crc = crc;
              uncompressed_size = uncompr_size;
@@ -453,6 +465,7 @@ let add_entry_header ofile extra comment level mtime filename =
     extra = extra;
     comment = comment;
     methd = (if level = 0 then Stored else Deflated);
+    enc_methd = NoEncryption;
     mtime = mtime;
     crc = Int32.zero;
     uncompressed_size = 0;
